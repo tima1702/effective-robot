@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Расчёт ставок разработчиков</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        label, input, button {
+            margin-bottom: 10px;
+        }
+        input[type="number"] {
+            margin-left: 5px;
+        }
+        table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <label for="totalAmount">Введите итоговую сумму:</label>
+    <input type="number" id="totalAmount" placeholder="Итоговая сумма" />
+    <button onclick="calculate()">Рассчитать</button>
+    <button onclick="verify()">Проверить расчёт</button>
+</div>
+<table id="resultTable">
+    <tr>
+        <th>Разработчик</th>
+        <th>Часы</th>
+    </tr>
+</table>
+<div id="verificationResult"></div>
+
+<script>
+    const rates = {
+        'Frontend developer': 2200,
+        'Mobile developer': 2000,
+        'Backend developer': 1800
+    };
+    let distribution = {}; // Хранение последнего распределения часов
+
+    function calculate() {
+        const totalAmount = parseFloat(document.getElementById('totalAmount').value);
+        const keys = Object.keys(rates);
+        distribution = distributeAmount(keys.length, totalAmount, rates);
+
+        const resultTable = document.getElementById('resultTable');
+        // Очистить предыдущие результаты, кроме заголовка
+        resultTable.innerHTML = '<tr><th>Разработчик</th><th>Часы</th></tr>';
+
+        keys.forEach(key => {
+            const row = resultTable.insertRow(-1);
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            cell1.textContent = key;
+            cell2.textContent = distribution[key].toFixed(2);
+        });
+    }
+
+    function verify() {
+        let sum = 0;
+        Object.keys(distribution).forEach(key => {
+            sum += distribution[key] * rates[key];
+        });
+        document.getElementById('verificationResult').textContent = `Проверочная сумма: ${sum.toFixed(2)}`;
+    }
+
+    function distributeAmount(n, total, rates) {
+        let distribution = {};
+        let totalDistributed = 0;
+
+        // Начальное распределение
+        Object.keys(rates).forEach(key => {
+            const part = total / n / rates[key];
+            distribution[key] = part;
+            totalDistributed += part * rates[key];
+        });
+
+        // Корректировка распределения для соответствия общей сумме
+        let difference = total - totalDistributed;
+        while (Math.abs(difference) > 1) {
+            Object.keys(rates).forEach(key => {
+                const adjustment = difference / (n * rates[key]);
+                distribution[key] += adjustment;
+                difference -= adjustment * rates[key];
+            });
+        }
+
+        return distribution;
+    }
+</script>
+</body>
+</html>
